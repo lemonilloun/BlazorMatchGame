@@ -1,10 +1,59 @@
 ﻿@page "/"
 
+<style>
+
+    .container {
+        width: 400px;
+    }
+
+    button {
+        width: 100px;
+        height: 100px;
+        font-size: 50px;
+    }
+
+</style>
+
+
 <PageTitle>Index</PageTitle>
 
-<h1>Hello, world!</h1>
+<div class="container">
+    <div class="row">
+        @foreach (var cat in shuffledCats)
+            {
+                <div class="col-3">
+                    <button type="button" class="btn btn-outline-dark">
+                        <h1>@cat</h1>
+                    </button>
+                </div>
+            }
+    </div>
+</div>
 
-Welcome to your new app.
+@code {
+    List<string> catsEmoji = new List<string>()
+    {
+        "😺", "😺",
+        "😸", "😸",
+        "😹", "😹",
+        "😻", "😻",
+        "😼", "😼",
+        "😽", "😽",
+        "😿", "😿",
+        "🐈", "🐈",
+    };
 
-<SurveyPrompt Title="How is Blazor working for you?" />
+    List<string> shuffledCats = new List<string>();
 
+    protected override void OnInitialized()
+    {
+        SetUpGame();
+
+    }
+
+    private void SetUpGame()
+    {
+        Random random = new Random();
+        shuffledCats = catsEmoji.OrderBy(item => random.Next()).ToList();
+    }
+}
