@@ -1,4 +1,5 @@
 ﻿@page "/"
+@using System.Timers
 
 <style>
 
@@ -15,23 +16,31 @@
 </style>
 
 
-<PageTitle>Index</PageTitle>
+<PageTitle>Cat Matching Game</PageTitle>
 
 <div class="container">
     <div class="row">
-        @foreach (var cat in shuffledCats)
+        @for (var catNumber = 0; catNumber < shuffledCats.Count(); catNumber++)
             {
+                var cat = shuffledCats[catNumber];
+                var uniqDescription = $"Button #{catNumber}";
                 <div class="col-3">
-                    <button type="button" class="btn btn-outline-dark">
+                    <button @onclick="@(() => ButtonClick(cat, uniqDescription))" type="button" class="btn btn-outline-dark">
                         <h1>@cat</h1>
                     </button>
                 </div>
             }
     </div>
+    <div class="row">
+        <h2>Matches found: @matchesFound</h2>
+    </div>
+    <div class="row">
+        <h2>Time: @timeDisplay</h2>
+    </div>
 </div>
 
 @code {
-    List<string> catsEmoji = new List<string>()
+        List<string> catsEmoji = new List<string>()
     {
         "😺", "😺",
         "😸", "😸",
@@ -43,10 +52,16 @@
         "🐈", "🐈",
     };
 
-    List<string> shuffledCats = new List<string>();
+        List<string> shuffledCats = new List<string>();
+        int matchesFound = 0;
+        Timer timer;
+        int tenthsOfSecondsElapsed = 0;
+        string timeDisplay;
 
     protected override void OnInitialized()
     {
+        timer = new Timer(100);
+        timer.Elapsed += Timer_Tick;
         SetUpGame();
 
     }
@@ -55,5 +70,48 @@
     {
         Random random = new Random();
         shuffledCats = catsEmoji.OrderBy(item => random.Next()).ToList();
+        matchesFound = 0;
+        tenthsOfSecondsElapsed = 0;
+
+    }
+
+    string lastCatFound = string.Empty;
+    string lastDescription = string.Empty;
+
+    private void ButtonClick(string cat, string catDescription)
+    {
+        if (lastCatFound == string.Empty)
+        {
+            lastCatFound = cat;
+            lastDescription = catDescription;
+            timer.Start();
+        }
+        else if ((lastCatFound == cat) && (lastDescription != catDescription))
+        {
+            lastCatFound = string.Empty;
+            shuffledCats = shuffledCats.Select(a => a.Replace(cat, string.Empty)).ToList();
+
+            matchesFound++;
+            if (matchesFound == 8)
+            {
+                timer.Stop();
+                timeDisplay += "- Play again?";
+                SetUpGame();
+            }
+        }
+        else
+        {
+            lastCatFound = string.Empty;
+        }
+    }
+
+    private void Timer_Tick(Object source, ElapsedEventArgs e)
+    {
+        InvokeAsync(() =>
+        {
+            tenthsOfSecondsElapsed++;
+            timeDisplay = (tenthsOfSecondsElapsed / 10F).ToString("0.0s");
+            StateHasChanged();
+        });
     }
 }
